@@ -1,0 +1,22 @@
+{
+  "id": "aristotle",
+  "name": "Aristotle",
+  "version": "2.0.0",
+  "description": "⟁ Memory protection for OpenClaw agents. Your agent won't forget.",
+  "homepage": "https://github.com/aristotle-agent/aristotle",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true,
+        "description": "Enable or disable Aristotle"
+      }
+    }
+  },
+  "openclaw": {
+    "minVersion": "2026.2.1",
+    "emoji": "⟁",
+    "extensions": ["src/plugin/index.ts"]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "aristotle",
+  "version": "2.0.0",
+  "description": "⟁ Memory protection for OpenClaw agents. Your agent won't forget.",
+  "main": "dist/plugin/index.js",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aristotle-agent/aristotle"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "openclaw",
+    "memory",
+    "protection",
+    "guard",
+    "context",
+    "qc",
+    "agent",
+    "ai"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^22.0.0"
+  },
+  "openclaw": {
+    "extensions": ["src/plugin/index.ts"]
+  },
+  "bin": {
+    "aristotle": "dist/cli/index.js"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "openclaw.plugin.json",
+    "README.md",
+    "LICENSE"
+  ]
+}
