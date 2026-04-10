@@ -2,100 +2,21 @@
 
 **Your agent won't forget.**
 
-"My agent woke up blank. Again."   
+I bought a Mac Mini, set up OpenClaw, and proudly had my agent introduce himself to the family. Our own Jarvis. The next morning he said, "Who am I? Who are you?"
 
-You explain the project, get confirmation and proudly type: proceed.  
+That first month was brutal. I'd explain a project, get confirmation, type "proceed" — and twenty minutes later the agent contradicts itself, forgets the idea I mentioned three times, and confidently references a project that doesn't exist.
 
-But twenty minutes later, the agent contradicts itself. It forgets the idea you mentioned three times. It confidently referenced a project that doesn't even exist.
+I'm not the only one:
 
-Maybe the YouTube videos about agents and automation are just hype. Maybe you're mad that you now know what Terminal is. 
+- "Every session starts from zero." — OpenClaw Pulse
+- "It forgets context between sessions" — #2 complaint (GitHub #39885)
+- "Your bot really did forget everything. It just needs a memory system." — OpenClaw Pulse
 
-Maybe all you wanted was a tool that ran itself. 
+That last line is the key. It just needs a memory system.
 
+Aristotle is that system. It stores, protects, cross-checks, and verifies. No other tool combines all four.
 
-The problem? It's the way the memory system is structured. 
-
-
-Aristotle fixes this.  
-
-
-You're not the only one dealing with this issue.
-
-
-Look at the top complaints from Open Claw users:
-
-- "It forgets context between sessions" — second most-cited complaint (GitHub #39885)
-
-- "The model wakes up with a blank slate. There's no magic database running quietly in the background." — OpenClaw Pulse
-
-- "Every session starts from zero." — OpenClaw Pulse memory guide
-
-- "Most AI agents have amnesia. They forget everything the moment you start a new chat." — memory-lancedb-pro
-
-- "Your bot really did forget everything. And no, it's not broken. It just needs a memory system." — OpenClaw Pulse  
-
-
-READ THAT LAST SENTENCE AGAIN... that is the key. 
-"It just needs a memory system" 
-
-That's all. 
-
-Aristotle uses a simple 4-step process to fix the memory system. All automated. It stores, protects, cross-checks and verifies. Aristotle *remembers* 
-
-This system has never existed, combining memory, guardrails, storage and verification.  
-
-
-Why does OpenClaw's software forget?  
-Your agent doesn't have a "bug", it's just the way OpenClaw was built.
-
-You give instructions and the agent puts them in short-term memory, then long term memory. But if you give too many prompts everything vanishes. And your agent acts like a lost puppy, ready to help you all over again. 
-
-It's called compaction, and it's actually a good thing. But that's destructive. Hence, the amnesia. This system manages compaction so it becomes an asset, not an enemy.  
-
-
-What about Memory Plugins? 
-
-Some are excellent. Aristotle actually works great in combination with them. But they solve different problems. Look at how these plugins work:
-- Lossless Claw saves everything during compression — nothing gets deleted. 
-- memory-lancedb-pro remembers your preferences across sessions. 
-- QMD makes your old conversations searchable. 
-
-All powerful, even world-class quality. But none of them stop your agent's memory from being silently destroyed mid-conversation. Your agent will still slam into amnesia. 
-
-Why?
-
-Because these plugins store and retrieve.
- 
-Aristotle stores, protects, cross-checks, and verifies. That 4-step structure is the difference.
-
-
-By the way, I'm a user too. I bought a MacMini, told my teenage son to get ready to dream up a business and our agent will do all the work. Just like I watched online. But day-1 was all downloads and APIs. Maybe day two would be better? Nope. I just stayed up 4 extra hours and figured out how to make it send an email.  
-
-After church the next day, I proudly had the agent send an email introducing himself to the family. So cool. Like our own family Jarvis. 
-
-But the next morning the agent literally started the session with, "Who am I. Who are you?" 
-
-The next week was even less sleep. 
-
-Which is why I have obsessively created the Aristotle solution. 
-
-
-Listen, I made Aristotle because I got tired of waking up to a blank agent. My first month was brutal. This solution is what came out of that month. I'm hoping you'll see an instant difference like I did. 
-
-While no software is perfect Aristotle is really, really good at getting this piece right.
-
-Join me in making this the standard. 
-
-Because agents shouldn't forget.  
-
-
-One more thing before you read the details below:
-My token use per prompt dropped from an embarrassing 262k average in my first week to now under 12k.  
-
-I see how that could sound a little salesy but it's a normal byproduct of the Aristotle system working. 
-
-
-Here is how it works:
+My token use dropped from 262K per prompt to under 12K. That's not a sales pitch — it's a normal byproduct of the system working.
 
 ```
 ⟁ Aristotle              →  Your agent won't forget
@@ -106,13 +27,11 @@ Here is how it works:
 
 ## Why This Exists
 
-Every other tool for agent memory works the same way: wait for the problem, then try to fix it. Wait for the conversation to overflow, then compress. Wait for memory to be lost, then try to recover. Wait for files to be corrupted, then notice on the next reboot.
+Every other tool works the same way: wait for the problem, then try to fix it. Wait for overflow, then compress. Wait for memory loss, then try to recover.
 
-Aristotle works differently. Instead of reacting to damage, it prevents the conditions that cause damage in the first place.
+Aristotle works differently. Every morning, your agent reads everything once and produces a compact cheat sheet — about 20 lines. That's all it carries for the rest of the day. Working memory stays lean because unnecessary accumulation never happens.
 
-Every morning, your agent reads everything once and produces a compact cheat sheet — about 20 lines. That cheat sheet is all it carries for the rest of the day. It doesn't re-read its full operating rules on every message. It doesn't stuff its entire history into every turn. The working memory stays lean because unnecessary accumulation never happens.
-
-When pressure does build during long sessions, Aristotle detects it and acts — before the crisis, not during it. And if something slips through despite all of this, a nightly audit catches it and fixes it while you sleep.
+When pressure builds during long sessions, Aristotle detects it and acts before the crisis. And if something slips through, a nightly audit catches and fixes it while you sleep.
 
 Every other system compresses after the damage is done. Aristotle never accumulates the damage in the first place.
 
@@ -126,37 +45,40 @@ Aristotle does 4 things. Each one strengthens the others.
 3. QC Nightly — 11 automated checks run every night. Fixes what it can. Only contacts you if something needs a human.
 4. QC Mid-Session — lightweight checks during the day so problems at 2 PM don't wait until 11 PM.
 
-No other tool combines all four. Memory, guardrails, storage and verification. That's the difference.
-
 
 ### Guard
 
 Guard sits between your agent and every action it takes. Before a file write executes, before a shell command runs, before a sub-agent spawns — Guard checks it against 10 protection rules. If the action would damage memory, Guard blocks it and tells the agent exactly what to do instead.
 
-This isn't a suggestion your agent can ignore. It's enforced in code. The agent doesn't need to remember the rule — Guard remembers it for them.
+This isn't a suggestion your agent can ignore. It's enforced in code.
 
 ```
-Write to AGENTS.md         →  "Read-only. Notes go to memory/qc/"
+Write to AGENTS.md         →  Saved for owner approval (guarded mode)
+                              or blocked entirely (locked mode)
 gateway stop               →  "Use gateway restart instead"
 Edit tool on daily log     →  "Use exec append instead"
 Credential in .md file     →  "Store in .env only"
-Overwrite MEMORY.md        →  "Append, don't replace. Use exec append."
-Spawn sub-agent bare       →  "Read continuity file first. Include context."
+Overwrite MEMORY.md        →  "Append, don't replace"
+Spawn sub-agent bare       →  "Read continuity file first"
+rm -rf in scratch dirs     →  ✅ Allowed (temp cleanup is fine)
+rm -rf on memory paths     →  Blocked (memory files are protected)
 Normal file read           →  ✅ Allowed
 Normal memory write        →  ✅ Allowed
 ```
 
-Guard blocks are redirections, not errors. Your agent gets a clear alternative and keeps working. Other security plugins in the OpenClaw ecosystem block dangerous actions — Aristotle redirects to correct ones. The agent tried the wrong approach, Guard showed it the right one, and work continues without interruption.
+Guard blocks are redirections, not errors. Your agent gets a clear alternative and keeps working.
 
-The memory overwrite rule alone prevents the single most common corruption in OpenClaw: your agent writing 42 characters to a file that had 2,847. Guard catches this before the damage happens. The sub-agent rule ensures that when your agent delegates work, the sub-agent gets project context — not a blank slate.
+**Boot file protection** — two modes, you choose during setup:
+
+- **Guarded** (default) — your agent can propose changes to boot files like AGENTS.md. Aristotle holds them for your approval. A weekly report shows what was attempted. You reply with the numbers to approve.
+- **Locked** — no agent writes to boot files, period. Terminal only. For users who want the vault.
+
 
 ### Context Shield
 
-Your agent's working memory has a size limit. When it fills up, the system compresses older parts of your conversation to make room. That compression is where memory loss happens — important details get summarized away.
+Your agent's working memory has a size limit. When it fills up, the system compresses older parts of your conversation. That compression is where memory loss happens.
 
-Context Shield watches how full your agent's working memory is getting by reading actual usage data from session files. No guessing, no asking the AI to self-report.
-
-When pressure builds, it acts early:
+Context Shield watches how full your agent's working memory is by reading actual usage data from session files. No guessing, no asking the AI to self-report.
 
 | How full | What happens |
 |----------|-------------|
@@ -164,23 +86,24 @@ When pressure builds, it acts early:
 | 65% | Compresses proactively — while there's still room to do it carefully. |
 | 70% | Alerts you and starts a fresh session — before emergency compression destroys important context. |
 
-The difference between "managed compression with time to save what matters" and "emergency compression that destroys what matters" is the difference between a normal Tuesday and a lost afternoon. Context Shield keeps you on the normal Tuesday.
+Destructive commands are path-aware. Cleaning `/tmp/scratch-repo` passes through — your memory paths stay protected.
+
 
 ### QC
 
 Two modes. Same job: catch what slips through.
 
-**Every night** — 11 checks run automatically in an isolated session. Are all your memory files present? Is your search system working? Are your settings intact? Has anything drifted since yesterday? QC fixes what it can on its own. It only contacts you if something needs your attention. Silence means everything is clean.
+**Every night** — 11 checks run automatically. Are your memory files present? Is search working? Are settings intact? Has anything drifted? QC fixes what it can. Silence means clean.
 
-**During the day** — Every 50 actions your agent takes, QC runs two lightweight checks: is the daily log actually being written to (catches silent write failures), and are your file changes backed up (catches backup gaps). These catch problems at 2 PM instead of 11 PM.
+**During the day** — Every 50 actions, QC checks if the daily log is being written and if file changes are backed up.
 
-**The nightly report** — When QC finishes, a branded report arrives on your Telegram, Discord, or WhatsApp — whichever you chose during setup. The reports are generated in code, not by the AI. That means the format is identical every night — same layout, same progress bar, same plain English translations. No creative interpretation, no missing sections, no surprises. You get the same professional report whether your agent is running on GPT-5 or a local Llama model.
+**The nightly report** — generated in code, not by the AI. Same layout every night.
 
 ```
 ⟁ [ARISTOTLE] · Memory
 28 Mar · 11:20 PM ET
 ────────────────────────
-MEMORY HEALTH  █████████░  10/11
+MEMORY HEALTH  █████████░  90%  10/11
 ────────────────────────
 Completed:
 · Memory search restored
@@ -191,6 +114,26 @@ Caught. Fixed. Logged. You are clear.
 
 Reply "show me QC data" for full details.
 ```
+
+Followed automatically by a memory audit snapshot:
+
+```
+⟁ [ARISTOTLE] · Memory Audit
+────────────────────────
+BOOTSTRAP    ██░░░░░░░░  21% used
+MEMORY.md    ██████░░░░  56% (84 lines)
+DAILY LOG    ██░░░░░░░░  1.2K chars
+────────────────────────
+Active Projects Protected: 8
+Guard (24h): 0 blocks
+Search: healthy
+Last QC: clean
+────────────────────────
+⟁ Your agent won't forget.
+
+Reply "show me audit trail" for raw data.
+```
+
 
 ### What Happens While You Sleep
 
@@ -223,14 +166,44 @@ Sunday 10 PM — Weekly Memory Review
             to MEMORY.md without your approval.
 ```
 
+### Pending Boot File Changes
+
+When your agent tries to modify protected boot files in guarded mode, Aristotle saves the change for your review. Every Sunday you get a report:
+
+```
+⟁ [ARISTOTLE] · Your attention is needed.
+
+2 Apr · 10:15 PM
+────────────────────────
+Your agent attempted changes to protected boot
+files this week. These files control how your
+agent thinks and operates — Aristotle held the
+changes for your review.
+
+1. AGENTS.md — "always confirm before deleting
+   any file" (Mar 28)
+2. SOUL.md — "prefer concise answers" (Apr 1)
+
+────────────────────────
+NEXT STEPS:
+Reply with the numbers to approve (e.g. "1, 3").
+Remaining items stay pending up to 30 days
+before automatic removal.
+────────────────────────
+⟁ Your boot files are protected.
+```
+
+
 ## Works Great With
 
 Aristotle is standalone, but these plugins complement it:
 
-- **Lossless Claw** — preserves every message during compression. Aristotle prevents compression pressure. Lossless makes compression lossless when it does happen. Together, nothing is lost.
+- **Lossless Claw** — preserves every message during compression. Aristotle prevents compression pressure. Together, nothing is lost.
 - **QMD** — adds semantic search across your memory files. Aristotle protects those files. QMD makes them searchable.
+- **Dreaming** (OpenClaw 4.5+) — consolidates memories overnight. Aristotle protects what Dreaming promotes. Dreaming decides what to remember. Aristotle makes sure those memories survive.
+- **Self-Improving skills** — learn from mistakes and append rules to AGENTS.md. Guarded mode holds those changes for your approval before they write.
 
-Not required. Not dependencies. Just honest recommendations from a user who runs both.
+Not required. Not dependencies. Just honest recommendations from a user who runs them.
 
 ## Quick Start
 
@@ -246,7 +219,18 @@ aristotle init
 aristotle doctor
 ```
 
-The setup wizard auto-detects your workspace path from your existing OpenClaw configuration. Six questions, sensible defaults. You choose your report delivery channel — Telegram, Discord, or WhatsApp — and the wizard only asks for the ID that matches. It deploys everything: QC agent protocol, report templates, four cron jobs, file permissions, memory settings, and directory structure. Nothing breaks. Nothing left to configure manually.
+The setup wizard asks 8 questions with sensible defaults:
+
+1. Agent name
+2. Owner name
+3. Workspace path (auto-detected)
+4. Enforcement mode
+5. Report delivery channel (Telegram / Discord / WhatsApp)
+6. Channel ID (only asks for the one that matches)
+7. Timezone (auto-detected)
+8. Boot file protection mode (guarded or locked)
+
+It deploys everything: QC agent protocol, report templates, cron jobs, file permissions, memory settings, and directory structure. A 30-second welcome tour shows you exactly what you installed.
 
 **Important:** Always install with `openclaw plugins install --link`. This creates the install provenance that OpenClaw's hook system requires. Without it, Guard registers but never fires. `aristotle doctor` checks this automatically.
 
@@ -261,7 +245,7 @@ $ aristotle doctor
 ✅ Data directory
 ✅ Workspace
 ✅ Plugin install: provenance verified
-✅ File permissions: 7 protected files correct
+✅ File permissions: 7 protected files
 ✅ Audit log: 3KB
 ✅ Report delivery: configured
 ✅ QC agent protocol: deployed
@@ -274,11 +258,13 @@ $ aristotle doctor
 ✅ Pre-reset checkpoint: ran this morning
 ✅ Weekly hygiene: last ran 3 day(s) ago
 ✅ QC delivery: last log from today
+✅ Pending changes: none
+✅ Protection mode: guarded
 
 ⟁ Your agent won't forget.
 ```
 
-17 checks. If anything is wrong, `aristotle doctor --fix` repairs it automatically — file permissions, missing directories, configuration drift. One command.
+If anything is wrong, `aristotle doctor --fix` repairs it automatically.
 
 ## CLI
 
@@ -288,15 +274,21 @@ $ aristotle
 ⟁ Aristotle — Memory Protection for OpenClaw
 
 Commands:
-  aristotle init         Setup wizard (auto-detects your config)
-  aristotle status        Current policy and recent activity
-  aristotle audit [n]     View last n decisions (default: 20)
-  aristotle audit-report  Memory status audit with visual health bars
-  aristotle doctor        Health check (17 checks)
-  aristotle doctor --fix  Auto-repair permissions, directories, config
-  aristotle report        Generate branded QC report
-  aristotle report --send Generate and send report via configured channel
-  aristotle version       Show version
+  aristotle init              Setup wizard (auto-detects your config)
+  aristotle status            Current policy and recent activity
+  aristotle audit [n]         View last n guard decisions (default: 20)
+  aristotle audit-report      Memory status audit with visual health bars
+  aristotle audit-report --send  Send audit via configured channel
+  aristotle doctor            Health check
+  aristotle doctor --fix      Auto-repair permissions, directories, config
+  aristotle report            Generate branded QC report
+  aristotle report --send     Send QC report + auto audit via configured channel
+  aristotle pending-report    View pending boot file changes
+  aristotle pending-report --send  Send pending report via configured channel
+  aristotle pending-approve 1,3   Approve specific pending changes by number
+  aristotle config show       View current configuration
+  aristotle config set        Update a setting
+  aristotle version           Show version
 
 Your agent won't forget.
 ```
@@ -304,29 +296,30 @@ Your agent won't forget.
 ## What Aristotle Doesn't Do
 
 - **Doesn't replace OpenClaw's built-in compression.** Aristotle adds a proactive layer on top. The built-in system is still the backstop.
-- **Doesn't guarantee zero memory loss.** Three behaviors depend on the AI itself: checking its own identity after compression, not making up information it doesn't have, and responding correctly when you tell it something is wrong. Code can't control what an AI thinks — only what it does.
+- **Doesn't guarantee zero memory loss.** Combined reliability on memory protection is 90-92%. The remaining 8-10% is caught by nightly QC. When something slips, we tell you.
 - **Doesn't manage tasks or projects.** That's the operations layer, coming separately. Aristotle protects memory. Period.
-- **Isn't 100% reliable.** Combined reliability on memory protection is 90-92%. The remaining 8-10% is caught by nightly QC or by the rules in your agent's operating files. When something slips, we tell you.
 
 ## How It Works (Technical)
 
 Aristotle is an OpenClaw plugin that uses the `before_tool_call` plugin hook ([docs](https://docs.openclaw.ai/tools/plugin)) to intercept every file write, shell command, and sub-agent spawn before execution.
 
-Most security plugins in the OpenClaw ecosystem use this hook to block dangerous actions — deny and stop. Aristotle does something different. When Guard detects a memory violation, it returns a redirect: the action is blocked, but the agent receives a specific corrective instruction. The agent follows the redirect and the work continues. We call this the **Memory Redirect** pattern — the difference between a bouncer and a waiter. The bouncer turns you away. The waiter checks your order against dietary restrictions and suggests something better. The agent never needs to "remember" the memory protection rules because Guard enforces them regardless of what the agent decides to do.
+When Guard detects a memory violation, it returns a redirect: the action is blocked, but the agent receives a specific corrective instruction. We call this the **Memory Redirect** pattern — the difference between a bouncer and a waiter. The bouncer turns you away. The waiter suggests something better.
 
-Context Shield piggybacks on Guard's hook counter. Every 50 tool calls, it reads the session JSONL transcript to calculate working memory usage. Three detection methods are tried automatically: ContextEngine API (if installed), JSONL transcript parsing (default), and tool-call-based estimation (fallback). User configures nothing.
+Destructive shell commands are path-aware. `rm -rf /tmp/scratch` passes through. `rm -rf ~/.openclaw/workspace/memory/` is blocked. Aristotle protects memory paths, not the whole filesystem.
 
-The QC nightly report uses a pattern worth explaining. Other plugins let the AI compose its own status messages. We tried that — the AI reformats the report differently every night, drops sections, invents summaries, and ignores templates despite explicit instructions. So the QC report is generated entirely in code. The AI runs the checks and provides raw data. A deterministic TypeScript formatter produces the branded report with the progress bar, plain English translations, and sign-off rotation. The report looks identical whether your agent runs GPT-5 or Llama. The AI never touches the formatting.
+In guarded mode, writes to boot files (AGENTS.md, SOUL.md, etc.) are intercepted and saved to a pending queue for owner approval. In locked mode, they're blocked outright.
 
-10 Guard rules. 17 doctor checks. 4 automated cron jobs. 11 nightly QC checks. 2 mid-session checks. All enforcement is code. Zero AI calls for any enforcement action. Zero overhead on your agent's capacity.
+Context Shield piggybacks on Guard's hook counter. Every 50 tool calls, it reads the session JSONL transcript to calculate working memory usage. Three detection methods are tried automatically. User configures nothing.
 
-The full source is about 3,000 lines of TypeScript across 11 files. If you want to know how it works before you install it, read `src/plugin/index.ts` first.
+The QC nightly report is generated entirely in code. The AI runs the checks and provides raw data. A deterministic TypeScript formatter produces the branded report. The report looks identical whether your agent runs GPT-5 or Llama.
+
+10 Guard rules. 17+ doctor checks. 5 automated cron jobs. 11 nightly QC checks. 2 mid-session checks. All enforcement is code. Zero AI calls for any enforcement action.
 
 ## Additive by Design
 
 Aristotle never breaks what already works. Your existing agent, channels, integrations, and workflows continue exactly as before. Guard only intercepts actions that would damage memory — everything else passes through untouched.
 
-The setup wizard reads your existing OpenClaw config to auto-detect settings. `doctor --fix` repairs problems without changing your agent's behavior. If you uninstall Aristotle, your agent works exactly like it did before you installed it.
+If you uninstall Aristotle, your agent works exactly like it did before you installed it.
 
 ## Requirements
 
