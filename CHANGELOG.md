@@ -1,5 +1,36 @@
 # Changelog
 
+## v2.0.1 — 2026-04-17
+
+Bug fixes and shell-safety hardening. Fully backward-compatible with v2.0.0 — existing installs upgrade cleanly with no cron edits or migration.
+
+### Fixes
+
+- **Duplicate report cascade** — `aristotle report --send` no longer forces an auto-audit chain when the operator wants a single send. Parent schedulers can now centrally gate sends via `ARISTOTLE_SUPPRESS_SEND=1` env var or `--no-send` CLI flag, covering all three send commands (`report`, `audit-report`, `pending-report`) and the internal auto-audit chain. Previously, three different crons calling `aristotle report --send` produced six Telegram messages per night (three × QC + Memory Audit pair) with no way to disable the chain.
+- **Fresh install QC template** — `qcCronPrompt()` in `src/templates.ts` no longer instructs the LLM to run `aristotle report --send` itself. Sending is now the exclusive responsibility of the separate `aristotle-qc-report` cron at 11:20 PM. This prevents fresh installs from reproducing the duplicate-report cascade. Existing installs are unchanged (OpenClaw freezes cron prompts at `cron add` time).
+- **Shell injection closed** — all 14 `execSync` call sites that built `openclaw message send ...` and `openclaw cron add ...` shell strings have been converted to `spawnSync` with `{ shell: false }` and arguments as an array. The previous `"${x.replace(/"/g, '\\"')}"` pattern escaped only double-quotes, leaving `$(...)`, backticks, and `\` interpretable by the shell. Internally-generated content is safe today, but any future feature that includes filenames, git output, or user input in a report would have been an RCE vector.
+- **Corrupt-file recovery** — `PendingChanges.read()` and `AuditLog.recent()` now rename unreadable JSON/JSONL files to `<name>.corrupt-<ISO-timestamp>` and log an error instead of silently returning empty arrays. Previously, a single corrupt byte in `pending-changes.json` erased the visible list of all pending boot-file approvals with no warning. `AuditLog.archive()` also logs failures instead of returning 0 silently.
+- **Subprocess cleanup** — replaced `execSync('sleep 5')` (spawns a full shell + sleep process) with `await new Promise(r => setTimeout(r, 5000))`. Minor, but removes a subprocess cost per `report --send`.
+
+### New
+
+- `ARISTOTLE_SUPPRESS_SEND=1` environment variable — suppresses all `--send` operations including the internal auto-audit chain. Intended for cron/CI/parent-orchestrator use when the caller wants to control sending centrally.
+- `--no-send` CLI flag — equivalent to the env var, for one-off use.
+
+### Behavior changes
+
+None for existing users. The default behavior of `aristotle report --send` is identical to v2.0.0 when neither the env var nor the flag is set: QC report sends, five seconds elapse, audit report sends.
+
+### Upgrading
+
+`npm update -g aristotle`. No other steps. Existing cron jobs and their prompts are unchanged.
+
+### Rollback
+
+`npm install -g aristotle@2.0.0`. Data files (`policy.json`, `pending-changes.json`, `audit.jsonl`) are forward-and-backward compatible.
+
+---
+
 ## v2.0.0 — 2026-03-28
 
 Complete memory protection platform for OpenClaw agents.

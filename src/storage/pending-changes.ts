@@ -11,13 +11,31 @@ export class PendingChanges {
     this.filePath = path.join(aristotleDir, PENDING_FILE);
   }
 
-  /** Read all pending changes */
+  /** Read all pending changes.
+   *
+   * v2.0.1: on corruption, rename the bad file to <name>.corrupt-<ISO-ts>
+   * and log an error. Previously returned [] silently, which was a silent
+   * data-loss bug -- every pending change the user had approved but not yet
+   * actioned would vanish without warning.
+   */
   read(): PendingChange[] {
     try {
       if (!fs.existsSync(this.filePath)) return [];
       const raw = fs.readFileSync(this.filePath, 'utf-8');
       return JSON.parse(raw) as PendingChange[];
-    } catch {
+    } catch (err) {
+      try {
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const corruptPath = `${this.filePath}.corrupt-${ts}`;
+        if (fs.existsSync(this.filePath)) {
+          fs.renameSync(this.filePath, corruptPath);
+          console.error(`[aristotle] pending-changes.json unreadable; preserved as ${corruptPath}:`, err);
+        } else {
+          console.error('[aristotle] pending-changes.json read failed:', err);
+        }
+      } catch (renameErr) {
+        console.error('[aristotle] pending-changes.json unreadable and could not be preserved:', err, renameErr);
+      }
       return [];
     }
   }

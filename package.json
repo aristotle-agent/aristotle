@@ -1,6 +1,6 @@
 {
   "name": "aristotle",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "⟁ Memory protection for OpenClaw agents. Your agent won't forget.",
   "main": "dist/plugin/index.js",
   "type": "module",

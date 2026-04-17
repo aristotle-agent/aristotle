@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
-import { execSync as execSyncTop } from 'child_process';
+import { execSync as execSyncTop, spawnSync } from 'child_process';
 import { AuditLog } from '../storage/audit-log.js';
 import { DEFAULT_CONFIG, PROTECTED_FILES } from '../config.js';
 import type { AristotleConfig } from '../types.js';
@@ -16,6 +16,93 @@ const ARISTOTLE_DIR = path.join(OPENCLAW_HOME, 'aristotle');
 const CONFIG_PATH = path.join(ARISTOTLE_DIR, 'policy.json');
 
 // ─── HELPERS ───
+
+/**
+ * Returns true if any form of --send should be suppressed for this invocation.
+ * Checks ARISTOTLE_SUPPRESS_SEND=1 env var and --no-send CLI flag.
+ * Used by `report --send`, `audit-report --send`, `pending-report --send`,
+ * and the auto-audit chain inside `report --send`.
+ *
+ * Added in v2.0.1 so parent schedulers (crons, CI, orchestrators) can
+ * centrally gate Aristotle's Telegram/Discord/etc sends without editing
+ * each caller.
+ */
+function shouldSuppressSend(): boolean {
+  if (process.env.ARISTOTLE_SUPPRESS_SEND === '1') return true;
+  if (process.argv.includes('--no-send')) return true;
+  return false;
+}
+
+/**
+ * Send a message via `openclaw message send`.
+ *
+ * Uses spawnSync with {shell: false} and arguments as an array so shell
+ * metacharacters in `content`, `channel`, or `target` cannot be interpreted.
+ * Replaces the pre-v2.0.1 pattern of execSync with fragile
+ * `"...${x.replace(/"/g, '\\"')}"` escaping, which did not escape $ ( ) ` \.
+ *
+ * Returns true on exit code 0, false otherwise. Never throws.
+ */
+function sendMessage(
+  channel: string,
+  target: string,
+  content: string,
+  opts?: { silent?: boolean; timeoutMs?: number },
+): boolean {
+  const silent = opts?.silent !== false;
+  const timeoutMs = opts?.timeoutMs ?? 15000;
+  const args = [
+    'message', 'send',
+    '--channel', channel,
+    '--target', target,
+    '--message', content,
+  ];
+  if (silent) args.push('--silent');
+  try {
+    const result = spawnSync('openclaw', args, {
+      timeout: timeoutMs,
+      stdio: 'pipe',
+      shell: false,
+    });
+    return result.status === 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Add a cron via `openclaw cron add` using the same shell-safe pattern
+ * as sendMessage. Returns true on exit code 0, false otherwise.
+ */
+function addCron(opts: {
+  name: string;
+  cron: string;
+  tz: string;
+  session: string;
+  message: string;
+  noDeliver?: boolean;
+  timeoutMs?: number;
+}): boolean {
+  const args = [
+    'cron', 'add',
+    '--name', opts.name,
+    '--cron', opts.cron,
+    '--tz', opts.tz,
+    '--session', opts.session,
+    '--message', opts.message,
+  ];
+  if (opts.noDeliver !== false) args.push('--no-deliver');
+  try {
+    const result = spawnSync('openclaw', args, {
+      timeout: opts.timeoutMs ?? 15000,
+      stdio: 'pipe',
+      shell: false,
+    });
+    return result.status === 0;
+  } catch {
+    return false;
+  }
+}
 
 function loadConfig(): AristotleConfig | null {
   try {
@@ -382,10 +469,14 @@ async function init(): Promise<void> {
     const cronList = execSync('openclaw cron list', { encoding: 'utf-8', timeout: 15000 });
     if (!cronList.includes('aristotle-qc-nightly')) {
       const prompt = qcCronPrompt();
-      execSync(
-        `openclaw cron add --name "aristotle-qc-nightly" --cron "15 23 * * *" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "${prompt.replace(/"/g, '\\"')}" --no-deliver`,
-        { timeout: 15000, stdio: 'pipe' }
-      );
+      const ok = addCron({
+        name: 'aristotle-qc-nightly',
+        cron: '15 23 * * *',
+        tz: config.timezone || 'America/New_York',
+        session: 'isolated',
+        message: prompt,
+      });
+      if (!ok) throw new Error('openclaw cron add failed');
       console.log('✅ Aristotle QC nightly cron job created (11:15 PM)');
     } else {
       console.log('✅ Aristotle QC nightly cron job already exists');
@@ -401,10 +492,14 @@ async function init(): Promise<void> {
     try {
       const cronList = execSync('openclaw cron list', { encoding: 'utf-8', timeout: 15000 });
       if (!cronList.includes('aristotle-qc-report')) {
-        execSync(
-          `openclaw cron add --name "aristotle-qc-report" --cron "20 23 * * *" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "Use the exec tool to run: aristotle report --send" --no-deliver`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        const ok = addCron({
+          name: 'aristotle-qc-report',
+          cron: '20 23 * * *',
+          tz: config.timezone || 'America/New_York',
+          session: 'isolated',
+          message: 'Use the exec tool to run: aristotle report --send',
+        });
+        if (!ok) throw new Error('openclaw cron add failed');
         console.log('✅ QC report delivery cron job created (11:20 PM)');
       } else {
         console.log('✅ QC report delivery cron job already exists');
@@ -420,10 +515,14 @@ async function init(): Promise<void> {
     if (!cronList.includes('aristotle-continuity-nightly')) {
       const { continuityCronPrompt } = await import('../templates.js');
       const contPrompt = continuityCronPrompt(resolvedWs);
-      execSync(
-        `openclaw cron add --name "aristotle-continuity-nightly" --cron "45 22 * * *" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "${contPrompt.replace(/"/g, '\\"')}" --no-deliver`,
-        { timeout: 15000, stdio: 'pipe' }
-      );
+      const ok = addCron({
+        name: 'aristotle-continuity-nightly',
+        cron: '45 22 * * *',
+        tz: config.timezone || 'America/New_York',
+        session: 'isolated',
+        message: contPrompt,
+      });
+      if (!ok) throw new Error('openclaw cron add failed');
       console.log('✅ Continuity nightly cron created (10:45 PM)');
     } else {
       console.log('✅ Continuity nightly cron already exists');
@@ -438,10 +537,14 @@ async function init(): Promise<void> {
     if (!cronList.includes('aristotle-pre-reset-checkpoint')) {
       const { preResetCronPrompt } = await import('../templates.js');
       const resetPrompt = preResetCronPrompt(resolvedWs);
-      execSync(
-        `openclaw cron add --name "aristotle-pre-reset-checkpoint" --cron "30 3 * * *" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "${resetPrompt.replace(/"/g, '\\"')}" --no-deliver`,
-        { timeout: 15000, stdio: 'pipe' }
-      );
+      const ok = addCron({
+        name: 'aristotle-pre-reset-checkpoint',
+        cron: '30 3 * * *',
+        tz: config.timezone || 'America/New_York',
+        session: 'isolated',
+        message: resetPrompt,
+      });
+      if (!ok) throw new Error('openclaw cron add failed');
       console.log('✅ Pre-reset checkpoint cron created (3:30 AM)');
     } else {
       console.log('✅ Pre-reset checkpoint cron already exists');
@@ -462,10 +565,14 @@ async function init(): Promise<void> {
           reportChannel: finalChannel,
           reportTarget: promotionTarget,
         });
-        execSync(
-          `openclaw cron add --name "aristotle-weekly-promotion" --cron "0 22 * * 0" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "${promoPrompt.replace(/"/g, '\\"')}" --no-deliver`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        const ok = addCron({
+          name: 'aristotle-weekly-promotion',
+          cron: '0 22 * * 0',
+          tz: config.timezone || 'America/New_York',
+          session: 'isolated',
+          message: promoPrompt,
+        });
+        if (!ok) throw new Error('openclaw cron add failed');
         console.log('✅ Weekly promotion review cron created (Sunday 10:00 PM)');
       } else {
         console.log('✅ Weekly promotion review cron already exists');
@@ -485,10 +592,14 @@ async function init(): Promise<void> {
           reportChannel: finalChannel,
           reportTarget: promotionTarget,
         });
-        execSync(
-          `openclaw cron add --name "aristotle-pending-review" --cron "15 22 * * 0" --tz "${config.timezone || 'America/New_York'}" --session isolated --message "${pendingPrompt.replace(/"/g, '\\"')}" --no-deliver`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        const ok = addCron({
+          name: 'aristotle-pending-review',
+          cron: '15 22 * * 0',
+          tz: config.timezone || 'America/New_York',
+          session: 'isolated',
+          message: pendingPrompt,
+        });
+        if (!ok) throw new Error('openclaw cron add failed');
         console.log('✅ Pending changes review cron created (Sunday 10:15 PM)');
       } else {
         console.log('✅ Pending changes review cron already exists');
@@ -592,10 +703,9 @@ async function init(): Promise<void> {
           '· Boot Sequence deployed — your agent reads once,',
           '  carries a card all day',
         ].join('\n');
-        execSync(
-          `openclaw message send --channel ${channel} --target ${target} --silent --message "${welcome.replace(/"/g, '\\"')}"`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        if (!sendMessage(channel, target, welcome)) {
+          throw new Error('sendMessage returned non-zero');
+        }
         console.log('  ✅ Welcome message sent');
       } catch { console.log('  ⚠️  Welcome message failed to send'); }
 
@@ -605,10 +715,9 @@ async function init(): Promise<void> {
       // Message 2 — QC report preview
       try {
         const previewIntro = '⟁ Here\'s what your nightly QC report looks like:';
-        execSync(
-          `openclaw message send --channel ${channel} --target ${target} --silent --message "${previewIntro}"`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        if (!sendMessage(channel, target, previewIntro)) {
+          throw new Error('sendMessage returned non-zero');
+        }
         // Generate report file, then send it directly (not --send, which triggers auto-audit)
         const { generateReport } = await import('../qc/report-formatter.js');
         generateReport({
@@ -617,10 +726,9 @@ async function init(): Promise<void> {
         }, OPENCLAW_HOME);
         const reportPath = path.join(ARISTOTLE_DIR, 'qc-telegram-report.txt');
         const reportContent = fs.readFileSync(reportPath, 'utf-8');
-        execSync(
-          `openclaw message send --channel ${channel} --target ${target} --silent --message "${reportContent.replace(/"/g, '\\"')}"`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        if (!sendMessage(channel, target, reportContent)) {
+          throw new Error('sendMessage returned non-zero');
+        }
         console.log('  ✅ QC report preview sent');
       } catch { console.log('  ⚠️  QC report preview failed to send'); }
 
@@ -629,15 +737,17 @@ async function init(): Promise<void> {
       // Message 3 — Audit report preview
       try {
         const auditIntro = '⟁ And here\'s your memory audit — a snapshot of your agent\'s memory health right now:';
-        execSync(
-          `openclaw message send --channel ${channel} --target ${target} --silent --message "${auditIntro}"`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
-        // Generate and send audit report directly
-        execSync(
-          `aristotle audit-report --send`,
-          { timeout: 30000, stdio: 'pipe' }
-        );
+        if (!sendMessage(channel, target, auditIntro)) {
+          throw new Error('sendMessage returned non-zero');
+        }
+        // Generate and send audit report directly (via self-exec, spawn with args
+        // array so no shell interpretation of binary path or flags).
+        const auditResult = spawnSync('aristotle', ['audit-report', '--send'], {
+          timeout: 30000, stdio: 'pipe', shell: false,
+        });
+        if (auditResult.status !== 0) {
+          throw new Error('aristotle audit-report --send returned non-zero');
+        }
         console.log('  ✅ Audit report preview sent');
       } catch { console.log('  ⚠️  Audit report preview failed to send'); }
 
@@ -652,10 +762,9 @@ async function init(): Promise<void> {
           '',
           'Your agent won\'t forget.',
         ].join('\n');
-        execSync(
-          `openclaw message send --channel ${channel} --target ${target} --silent --message "${closing.replace(/"/g, '\\"')}"`,
-          { timeout: 15000, stdio: 'pipe' }
-        );
+        if (!sendMessage(channel, target, closing)) {
+          throw new Error('sendMessage returned non-zero');
+        }
         console.log('  ✅ Tour complete\n');
       } catch { console.log('  ⚠️  Closing message failed to send'); }
     }
@@ -1265,18 +1374,17 @@ switch (command) {
 
     // --send flag
     if (process.argv.includes('--send')) {
-      const channel = config.reportChannel || 'telegram';
-      const target = config.reportTarget || config.telegramChatId;
-      if (target) {
-        try {
-          const { execSync } = await import('child_process');
-          execSync(
-            `openclaw message send --channel ${channel} --target ${target} --silent --message "${report.replace(/"/g, '\\"')}"`,
-            { timeout: 15000, stdio: 'pipe' }
-          );
-          console.log(`✅ Pending changes report sent via ${channel}.`);
-        } catch (err) {
-          console.error('❌ Failed to send pending report:', err);
+      if (shouldSuppressSend()) {
+        console.log('⟁ Send suppressed via ARISTOTLE_SUPPRESS_SEND / --no-send.');
+      } else {
+        const channel = config.reportChannel || 'telegram';
+        const target = config.reportTarget || config.telegramChatId;
+        if (target) {
+          if (sendMessage(channel, target, report)) {
+            console.log(`✅ Pending changes report sent via ${channel}.`);
+          } else {
+            console.error('❌ Failed to send pending report.');
+          }
         }
       }
     }
@@ -1478,18 +1586,17 @@ switch (command) {
 
     // --send flag
     if (process.argv.includes('--send')) {
-      const channel = config.reportChannel || 'telegram';
-      const target = config.reportTarget || config.telegramChatId;
-      if (target) {
-        try {
-          const { execSync } = await import('child_process');
-          execSync(
-            `openclaw message send --channel ${channel} --target ${target} --silent --message "${auditReport.replace(/"/g, '\\"')}"`,
-            { timeout: 15000, stdio: 'pipe' }
-          );
-          console.log(`✅ Audit report sent via ${channel}.`);
-        } catch (err) {
-          console.error('❌ Failed to send audit report:', err);
+      if (shouldSuppressSend()) {
+        console.log('⟁ Send suppressed via ARISTOTLE_SUPPRESS_SEND / --no-send.');
+      } else {
+        const channel = config.reportChannel || 'telegram';
+        const target = config.reportTarget || config.telegramChatId;
+        if (target) {
+          if (sendMessage(channel, target, auditReport)) {
+            console.log(`✅ Audit report sent via ${channel}.`);
+          } else {
+            console.error('❌ Failed to send audit report.');
+          }
         }
       }
     }
@@ -1619,33 +1726,43 @@ switch (command) {
 
     // --send flag: deliver the report via configured channel
     if (process.argv.includes('--send')) {
-      const config = loadConfig();
-      const channel = config?.reportChannel || 'telegram';
-      const target = config?.reportTarget || config?.telegramChatId;
-      if (!target) {
-        console.error('No report target configured. Run "aristotle init" first.');
+      if (shouldSuppressSend()) {
+        console.log('⟁ Send suppressed via ARISTOTLE_SUPPRESS_SEND / --no-send.');
       } else {
-        try {
-          const reportPath = path.join(ARISTOTLE_DIR, 'qc-telegram-report.txt');
-          const reportContent = fs.readFileSync(reportPath, 'utf-8');
-          const { execSync } = await import('child_process');
-          execSync(
-            `openclaw message send --channel ${channel} --target ${target} --silent --message "${reportContent.replace(/"/g, '\\"')}"`,
-            { timeout: 15000, stdio: 'pipe' }
-          );
-          console.log(`✅ Report sent via ${channel}.`);
-
-          // Auto-send audit report 5 seconds after QC report
+        const config = loadConfig();
+        const channel = config?.reportChannel || 'telegram';
+        const target = config?.reportTarget || config?.telegramChatId;
+        if (!target) {
+          console.error('No report target configured. Run "aristotle init" first.');
+        } else {
           try {
-            execSync('sleep 5', { timeout: 10000 });
-            execSync(
-              `aristotle audit-report --send`,
-              { timeout: 30000, stdio: 'pipe' }
-            );
-            console.log(`✅ Audit report sent via ${channel}.`);
-          } catch { /* audit report is optional — don't fail if it doesn't send */ }
-        } catch (err) {
-          console.error('❌ Failed to send report:', err);
+            const reportPath = path.join(ARISTOTLE_DIR, 'qc-telegram-report.txt');
+            const reportContent = fs.readFileSync(reportPath, 'utf-8');
+            if (sendMessage(channel, target, reportContent)) {
+              console.log(`✅ Report sent via ${channel}.`);
+
+              // Auto-send audit report 5 seconds after QC report.
+              // Re-check suppression here so any env var / flag change between
+              // QC and audit (rare but possible) is respected. This is also the
+              // gate that parent schedulers use to prevent the classic
+              // "3 crons × 2 cards each = 6 duplicate messages" cascade that
+              // v2.0.0 produced when multiple crons called `aristotle report --send`.
+              if (!shouldSuppressSend()) {
+                await new Promise(r => setTimeout(r, 5000));
+                const auditResult = spawnSync('aristotle', ['audit-report', '--send'], {
+                  timeout: 30000, stdio: 'pipe', shell: false,
+                });
+                if (auditResult.status === 0) {
+                  console.log(`✅ Audit report sent via ${channel}.`);
+                }
+                // audit report is optional — don't fail if it doesn't send
+              }
+            } else {
+              console.error('❌ Failed to send report.');
+            }
+          } catch (err) {
+            console.error('❌ Failed to send report:', err);
+          }
         }
       }
     }

@@ -403,10 +403,20 @@ export const REQUIRED_DIRS = [
 ];
 
 /**
- * Cron job prompt for the Aristotle QC nightly agent
+ * Cron job prompt for the Aristotle QC nightly agent (11:15 PM).
+ *
+ * v2.0.1: This cron does QC checks ONLY. Sending the QC report + memory
+ * audit is handled by the separate `aristotle-qc-report` cron at 11:20 PM.
+ * Having this cron also run `aristotle report --send` caused duplicate
+ * Telegram reports when users had multiple QC-style crons (e.g. f3-qc-nightly,
+ * aristotle-qc-nightly both triggering sends 15 minutes apart).
+ *
+ * If you want the old behavior (this cron sends too), append
+ * ` After completing checks, use the exec tool to run: aristotle report --send`
+ * to the returned string. Not recommended.
  */
 export function qcCronPrompt(): string {
-  return `You are the Aristotle QC Agent. Read protocols/agents/ARISTOTLE_QC_AGENT.md in full. Run all 11 checks directly in this session. Do NOT spawn sub-agents. Write results to memory/qc/ using today's date as the filename in format YYYY-MM-DD-aristotle-qc.md. Commit to git. After completing checks, use the exec tool to run: aristotle report --send`;
+  return `You are the Aristotle QC Agent. Read protocols/agents/ARISTOTLE_QC_AGENT.md in full. Run all 11 checks directly in this session. Do NOT spawn sub-agents. Write results to memory/qc/ using today's date as the filename in format YYYY-MM-DD-aristotle-qc.md. Commit to git. Do NOT run 'aristotle report --send' or 'aristotle audit-report --send' yourself -- the separate 'aristotle-qc-report' cron at 11:20 PM is responsible for sending the report. This cron is check-only.`;
 }
 
 /**

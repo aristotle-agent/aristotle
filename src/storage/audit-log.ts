@@ -26,7 +26,14 @@ export class AuditLog {
     }
   }
 
-  /** Read recent entries for the audit CLI command */
+  /** Read recent entries for the audit CLI command.
+   *
+   * v2.0.1: if the whole file is unreadable (not a single bad line but a
+   * total-file failure -- permissions, truncation, non-UTF8), rename to
+   * <name>.corrupt-<ISO-ts> and log an error rather than silently returning [].
+   * Per-line JSON parse errors still fail the whole batch here; future work
+   * could filter bad lines and keep good ones.
+   */
   recent(count: number = 20): AuditEntry[] {
     try {
       if (!fs.existsSync(this.logPath)) return [];
@@ -37,12 +44,27 @@ export class AuditLog {
       return lines
         .slice(-count)
         .map(line => JSON.parse(line) as AuditEntry);
-    } catch {
+    } catch (err) {
+      try {
+        if (fs.existsSync(this.logPath)) {
+          const ts = new Date().toISOString().replace(/[:.]/g, '-');
+          const corruptPath = `${this.logPath}.corrupt-${ts}`;
+          fs.renameSync(this.logPath, corruptPath);
+          console.error(`[aristotle] audit.jsonl unreadable; preserved as ${corruptPath}:`, err);
+        } else {
+          console.error('[aristotle] audit.jsonl read failed:', err);
+        }
+      } catch (renameErr) {
+        console.error('[aristotle] audit.jsonl unreadable and could not be preserved:', err, renameErr);
+      }
       return [];
     }
   }
 
-  /** Get log file size in bytes for doctor command */
+  /** Get log file size in bytes for doctor command.
+   * Silent-on-absence is intentional here: doctor uses 0 as the "no data yet"
+   * signal and renders that correctly in its health check output.
+   */
   sizeBytes(): number {
     try {
       if (!fs.existsSync(this.logPath)) return 0;
@@ -96,7 +118,11 @@ export class AuditLog {
       }
 
       return archived;
-    } catch {
+    } catch (err) {
+      // v2.0.1: surface archive failures. Silent failure previously left
+      // the main log growing without bound while archive() returned 0 and
+      // the doctor command reported "archived 0 entries" — misleading.
+      console.error('[aristotle] audit.jsonl archive failed:', err);
       return 0;
     }
   }
